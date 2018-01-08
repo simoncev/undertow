@@ -24,6 +24,7 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
 import io.undertow.server.handlers.proxy.ProxyHandler;
+import io.undertow.server.handlers.proxy.URIMappedProxyClient;
 import io.undertow.util.Headers;
 
 import java.net.URI;
@@ -36,7 +37,6 @@ import java.net.URISyntaxException;
 public class ReverseProxyServer {
 
     public static void main(final String[] args) {
-        try {
             final Undertow server1 = Undertow.builder()
                     .addHttpListener(8081, "localhost")
                     .setHandler(new HttpHandler() {
@@ -75,22 +75,21 @@ public class ReverseProxyServer {
 
             server3.start();
 
-            LoadBalancingProxyClient loadBalancer = new LoadBalancingProxyClient()
-                    .addHost(new URI("http://localhost:8081"))
-                    .addHost(new URI("http://localhost:8082"))
-                    .addHost(new URI("http://localhost:8083"))
-                    .setConnectionsPerThread(20);
+//            LoadBalancingProxyClient loadBalancer = new LoadBalancingProxyClient()
+//                    .addHost(new URI("http://localhost:8081"))
+//                    .addHost(new URI("http://localhost:8082"))
+//                    .addHost(new URI("http://localhost:8083"))
+//                    .setConnectionsPerThread(20);
+            URIMappedProxyClient proxy = new URIMappedProxyClient();
 
             Undertow reverseProxy = Undertow.builder()
                     .addHttpListener(8080, "localhost")
                     .setIoThreads(4)
-                    .setHandler(ProxyHandler.builder().setProxyClient(loadBalancer).setMaxRequestTime( 30000).build())
+                    .setHandler(ProxyHandler.builder().setProxyClient(proxy).setMaxRequestTime( 30000).build())
                     .build();
             reverseProxy.start();
 
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
 }
